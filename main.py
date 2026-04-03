@@ -1,8 +1,9 @@
 ﻿import os
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, Security
+from fastapi import Depends, FastAPI, HTTPException, Query, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from supabase import Client, create_client
 
@@ -15,13 +16,22 @@ API_KEY = os.environ["API_KEY"]
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = FastAPI(title="Skypay Memory API", version="1.0.0")
-bearer_scheme = HTTPBearer()
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def verify_token(credentials: HTTPAuthorizationCredentials = Security(bearer_scheme)):
-    if credentials.credentials != API_KEY:
-        raise HTTPException(status_code=401, detail="Invalid or missing API key.")
-    return credentials.credentials
+def verify_token(
+    credentials: Optional[HTTPAuthorizationCredentials] = Security(bearer_scheme),
+    api_key: Optional[str] = Query(default=None, alias="api_key"),
+):
+    token = None
+    if credentials is not None:
+        token = credentials.credentials
+    elif api_key is not None:
+        token = api_key
+
+    if token != API_KEY or token is None:
+        raise HTTPException(status_code=403, detail="Invalid or missing API key.")
+    return token
 
 
 @app.get("/health")
