@@ -16,7 +16,7 @@ load_dotenv()
 DATABASE_URL = os.environ["DATABASE_URL"]
 API_KEY      = os.environ["API_KEY"]
 
-pool = ThreadedConnectionPool(1, 10, dsn=DATABASE_URL)
+pool = ThreadedConnectionPool(1, 10, dsn=DATABASE_URL + "?sslmode=require" if "sslmode" not in DATABASE_URL else DATABASE_URL)
 
 app = FastAPI(title="Skypay Memory API", version="1.0.0")
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -91,3 +91,4 @@ def recent_wins(_: str = Depends(verify_token)):
 def relationship_alerts(_: str = Depends(verify_token)):
     rows = query("SELECT * FROM skypay.relationship_alerts ORDER BY next_due ASC")
     return {"data": rows}
+
