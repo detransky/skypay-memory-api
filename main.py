@@ -5,6 +5,7 @@ from typing import Optional
 
 import psycopg2
 import psycopg2.extras
+import uvicorn
 from psycopg2.pool import ThreadedConnectionPool
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Query, Security
@@ -109,3 +110,8 @@ def relationship_alerts(_: str = Depends(verify_token)):
         return {"data": rows}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
